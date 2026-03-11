@@ -130,12 +130,7 @@
 #define MAP_MAX_HEIGHT 65000
 #define MAP_MAX_LAYER 15
 
-// The size of the tile in pixels
-constexpr int TileSize = 32;
-
-// The default size of sprites
-#define SPRITE_PIXELS 32
-#define SPRITE_PIXELS_SIZE SPRITE_PIXELS* SPRITE_PIXELS
+// The size of the tile in pixels (use g_gui.gfx.getSpritePixels())
 
 // The sea layer
 #define GROUND_LAYER 7

@@ -17,6 +17,7 @@
 
 #include "main.h"
 #include "light_drawer.h"
+#include "gui.h"
 
 LightDrawer::LightDrawer() {
 	texture = 0;
@@ -67,10 +68,10 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 		}
 	}
 
-	const int draw_x = map_x * TileSize - scroll_x;
-	const int draw_y = map_y * TileSize - scroll_y;
-	int draw_width = w * TileSize;
-	int draw_height = h * TileSize;
+	const int draw_x = map_x * g_gui.gfx.getSpritePixels() - scroll_x;
+	const int draw_y = map_y * g_gui.gfx.getSpritePixels() - scroll_y;
+	int draw_width = w * g_gui.gfx.getSpritePixels();
+	int draw_height = h * g_gui.gfx.getSpritePixels();
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 

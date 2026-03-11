@@ -144,8 +144,9 @@ namespace LuaAPI {
 		GameSprite* gameSprite = dynamic_cast<GameSprite*>(sprite);
 		if (gameSprite && gameSprite->width > 0 && gameSprite->height > 0) {
 			// Calculate full sprite size (can be larger than 32x32 for multi-tile sprites)
-			int spriteWidth = gameSprite->width * 32;
-			int spriteHeight = gameSprite->height * 32;
+			int sp = g_gui.gfx.getSpritePixels();
+			int spriteWidth = gameSprite->width * sp;
+			int spriteHeight = gameSprite->height * sp;
 
 			// Create image with alpha channel
 			image.Create(spriteWidth, spriteHeight);
@@ -167,12 +168,12 @@ namespace LuaAPI {
 							uint8_t* rgbaData = normalImage->getRGBAData();
 							if (rgbaData) {
 								// Copy pixel data to the correct position
-								int destX = (gameSprite->width - 1 - x) * 32;
-								int destY = (gameSprite->height - 1 - y) * 32;
+								int destX = (gameSprite->width - 1 - x) * sp;
+								int destY = (gameSprite->height - 1 - y) * sp;
 
-								for (int py = 0; py < 32; ++py) {
-									for (int px = 0; px < 32; ++px) {
-										int srcIdx = (py * 32 + px) * 4;
+								for (int py = 0; py < sp; ++py) {
+									for (int px = 0; px < sp; ++px) {
+										int srcIdx = (py * sp + px) * 4;
 										int destIdx = (destY + py) * spriteWidth + (destX + px);
 
 										// Only copy non-transparent pixels
@@ -194,11 +195,12 @@ namespace LuaAPI {
 		}
 
 		// Fallback: use DC-based rendering
-		wxBitmap bmp(32, 32, 32);
+		int sp = g_gui.gfx.getSpritePixels();
+		wxBitmap bmp(sp, sp, 32);
 		wxMemoryDC dc(bmp);
 		dc.SetBackground(*wxWHITE_BRUSH);
 		dc.Clear();
-		sprite->DrawTo(&dc, SPRITE_SIZE_32x32, 0, 0, 32, 32);
+		sprite->DrawTo(&dc, SPRITE_SIZE_32x32, 0, 0, sp, sp);
 		dc.SelectObject(wxNullBitmap);
 		image = bmp.ConvertToImage();
 	}

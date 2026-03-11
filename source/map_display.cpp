@@ -352,15 +352,15 @@ void MapCanvas::ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y) 
 	screen_y *= GetContentScaleFactor();
 
 	if (screen_x < 0) {
-		*map_x = (start_x + screen_x) / TileSize;
+		*map_x = (start_x + screen_x) / g_gui.gfx.getSpritePixels();
 	} else {
-		*map_x = int(start_x + (screen_x * zoom)) / TileSize;
+		*map_x = int(start_x + (screen_x * zoom)) / g_gui.gfx.getSpritePixels();
 	}
 
 	if (screen_y < 0) {
-		*map_y = (start_y + screen_y) / TileSize;
+		*map_y = (start_y + screen_y) / g_gui.gfx.getSpritePixels();
 	} else {
-		*map_y = int(start_y + (screen_y * zoom)) / TileSize;
+		*map_y = int(start_y + (screen_y * zoom)) / g_gui.gfx.getSpritePixels();
 	}
 
 	if (floor <= GROUND_LAYER) {
@@ -1666,7 +1666,7 @@ void MapCanvas::OnKeyDown(wxKeyEvent& event) {
 				tiles = 1;
 			}
 
-			static_cast<MapWindow*>(GetParent())->Scroll(start_x, int(start_y - TileSize * tiles * zoom));
+			static_cast<MapWindow*>(GetParent())->Scroll(start_x, int(start_y - g_gui.gfx.getSpritePixels() * tiles * zoom));
 			UpdatePositionStatus();
 			Refresh();
 			break;
@@ -1683,7 +1683,7 @@ void MapCanvas::OnKeyDown(wxKeyEvent& event) {
 				tiles = 1;
 			}
 
-			static_cast<MapWindow*>(GetParent())->Scroll(start_x, int(start_y + TileSize * tiles * zoom));
+			static_cast<MapWindow*>(GetParent())->Scroll(start_x, int(start_y + g_gui.gfx.getSpritePixels() * tiles * zoom));
 			UpdatePositionStatus();
 			Refresh();
 			break;
@@ -1700,7 +1700,7 @@ void MapCanvas::OnKeyDown(wxKeyEvent& event) {
 				tiles = 1;
 			}
 
-			static_cast<MapWindow*>(GetParent())->Scroll(int(start_x - TileSize * tiles * zoom), start_y);
+			static_cast<MapWindow*>(GetParent())->Scroll(int(start_x - g_gui.gfx.getSpritePixels() * tiles * zoom), start_y);
 			UpdatePositionStatus();
 			Refresh();
 			break;
@@ -1717,7 +1717,7 @@ void MapCanvas::OnKeyDown(wxKeyEvent& event) {
 				tiles = 1;
 			}
 
-			static_cast<MapWindow*>(GetParent())->Scroll(int(start_x + TileSize * tiles * zoom), start_y);
+			static_cast<MapWindow*>(GetParent())->Scroll(int(start_x + g_gui.gfx.getSpritePixels() * tiles * zoom), start_y);
 			UpdatePositionStatus();
 			Refresh();
 			break;
@@ -1788,13 +1788,13 @@ void MapCanvas::OnKeyDown(wxKeyEvent& event) {
 				if (g_gui.IsSelectionMode()) {
 					int view_start_x, view_start_y;
 					static_cast<MapWindow*>(GetParent())->GetViewStart(&view_start_x, &view_start_y);
-					int view_start_map_x = view_start_x / TileSize, view_start_map_y = view_start_y / TileSize;
+					int view_start_map_x = view_start_x / g_gui.gfx.getSpritePixels(), view_start_map_y = view_start_y / g_gui.gfx.getSpritePixels();
 
 					int view_screensize_x, view_screensize_y;
 					static_cast<MapWindow*>(GetParent())->GetViewSize(&view_screensize_x, &view_screensize_y);
 
-					int map_x = int(view_start_map_x + (view_screensize_x * zoom) / TileSize / 2);
-					int map_y = int(view_start_map_y + (view_screensize_y * zoom) / TileSize / 2);
+					int map_x = int(view_start_map_x + (view_screensize_x * zoom) / g_gui.gfx.getSpritePixels() / 2);
+					int map_y = int(view_start_map_y + (view_screensize_y * zoom) / g_gui.gfx.getSpritePixels() / 2);
 
 					hk = Hotkey(Position(map_x, map_y, floor));
 				} else if (g_gui.GetCurrentBrush()) {
@@ -1814,7 +1814,7 @@ void MapCanvas::OnKeyDown(wxKeyEvent& event) {
 					int map_y = hk.GetPosition().y;
 					int map_z = hk.GetPosition().z;
 
-					static_cast<MapWindow*>(GetParent())->Scroll(TileSize * map_x, TileSize * map_y, true);
+					static_cast<MapWindow*>(GetParent())->Scroll(g_gui.gfx.getSpritePixels() * map_x, g_gui.gfx.getSpritePixels() * map_y, true);
 					floor = map_z;
 
 					g_gui.SetStatusText("Used hotkey " + i2ws(index));

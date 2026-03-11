@@ -121,7 +121,7 @@ void MapWindow::GetViewSize(int* x, int* y) {
 }
 
 void MapWindow::FitToMap() {
-	SetSize(editor.map.getWidth() * TileSize, editor.map.getHeight() * TileSize, true);
+	SetSize(editor.map.getWidth() * g_gui.gfx.getSpritePixels(), editor.map.getHeight() * g_gui.gfx.getSpritePixels(), true);
 }
 
 Position MapWindow::GetScreenCenterPosition() {
@@ -135,12 +135,12 @@ void MapWindow::SetScreenCenterPosition(const Position& position) {
 		return;
 	}
 
-	int x = position.x * TileSize;
-	int y = position.y * TileSize;
+	int x = position.x * g_gui.gfx.getSpritePixels();
+	int y = position.y * g_gui.gfx.getSpritePixels();
 	if (position.z <= GROUND_LAYER) {
 		// Compensate for floor offset above ground
-		x -= (GROUND_LAYER - position.z) * TileSize;
-		y -= (GROUND_LAYER - position.z) * TileSize;
+		x -= (GROUND_LAYER - position.z) * g_gui.gfx.getSpritePixels();
+		y -= (GROUND_LAYER - position.z) * g_gui.gfx.getSpritePixels();
 	}
 
 	const Position& center = GetScreenCenterPosition();

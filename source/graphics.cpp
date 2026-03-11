@@ -188,6 +188,7 @@ GraphicManager::GraphicManager() :
 	has_transparency(false),
 	has_frame_durations(false),
 	has_frame_groups(false),
+	sprite_pixels(32),
 	loaded_textures(0),
 	lastclean(0) {
 	animation_timer = newd wxStopWatch();
@@ -445,6 +446,7 @@ bool GraphicManager::loadOTFI(const FileName& filename, wxString& error, wxArray
 		has_transparency = node->valueAt<bool>("transparency");
 		has_frame_durations = node->valueAt<bool>("frame-durations");
 		has_frame_groups = node->valueAt<bool>("frame-groups");
+		sprite_pixels = node->valueAt<int>("sprite-size", 32);
 		std::string metadata = node->valueAt<std::string>("metadata-file", std::string(ASSETS_NAME) + ".dat");
 		std::string sprites = node->valueAt<std::string>("sprites-file", std::string(ASSETS_NAME) + ".spr");
 		metadata_file = wxFileName(filename.GetFullPath(), wxString(metadata));
@@ -457,6 +459,7 @@ bool GraphicManager::loadOTFI(const FileName& filename, wxString& error, wxArray
 		has_transparency = false;
 		has_frame_durations = false;
 		has_frame_groups = false;
+		sprite_pixels = 32;
 		metadata_file = wxFileName(filename.GetFullPath(), wxString(ASSETS_NAME) + ".dat");
 		sprites_file = wxFileName(filename.GetFullPath(), wxString(ASSETS_NAME) + ".spr");
 	}
@@ -1069,7 +1072,7 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size) {
 
 		const int bgshade = g_settings.getInteger(Config::ICON_BACKGROUND);
 
-		int image_size = std::max<int>(width, height) * SPRITE_PIXELS;
+		int image_size = std::max<int>(width, height) * g_gui.gfx.getSpritePixels();
 		wxImage image(image_size, image_size);
 		image.Clear(bgshade);
 
@@ -1079,9 +1082,9 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size) {
 					const int i = getIndex(w, h, l, 0, 0, 0, 0);
 					uint8_t* data = spriteList[i]->getRGBData();
 					if (data) {
-						wxImage img(SPRITE_PIXELS, SPRITE_PIXELS, data);
+						wxImage img(g_gui.gfx.getSpritePixels(), g_gui.gfx.getSpritePixels(), data);
 						img.SetMaskColour(0xFF, 0x00, 0xFF);
-						image.Paste(img, (width - w - 1) * SPRITE_PIXELS, (height - h - 1) * SPRITE_PIXELS);
+						image.Paste(img, (width - w - 1) * g_gui.gfx.getSpritePixels(), (height - h - 1) * g_gui.gfx.getSpritePixels());
 						img.Destroy();
 					}
 				}
@@ -1089,7 +1092,7 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size) {
 		}
 
 		// Now comes the resizing / antialiasing
-		if (size == SPRITE_SIZE_16x16 || image.GetWidth() > SPRITE_PIXELS || image.GetHeight() > SPRITE_PIXELS) {
+		if (size == SPRITE_SIZE_16x16 || image.GetWidth() > g_gui.gfx.getSpritePixels() || image.GetHeight() > g_gui.gfx.getSpritePixels()) {
 			int new_size = SPRITE_SIZE_16x16 ? 16 : 32;
 			image.Rescale(new_size, new_size);
 		}
@@ -1146,7 +1149,7 @@ void GameSprite::Image::createGLTexture(GLuint whatid) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Nearest-neighbor
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 0x812F); // GL_CLAMP_TO_EDGE
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 0x812F); // GL_CLAMP_TO_EDGE
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SPRITE_PIXELS, SPRITE_PIXELS, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, g_gui.gfx.getSpritePixels(), g_gui.gfx.getSpritePixels(), 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
 	delete[] rgba;
 #undef SPRITE_SIZE
@@ -1199,7 +1202,7 @@ uint8_t* GameSprite::NormalImage::getRGBData() {
 		}
 	}
 
-	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
+	const int pixels_data_size = g_gui.gfx.getSpritePixels() * g_gui.gfx.getSpritePixels() * 3;
 	uint8_t* data = newd uint8_t[pixels_data_size];
 	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
 	int write = 0;
@@ -1248,7 +1251,7 @@ uint8_t* GameSprite::NormalImage::getRGBAData() {
 		}
 	}
 
-	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
+	const int pixels_data_size = g_gui.gfx.getSpritePixelsSize() * 4;
 	uint8_t* data = newd uint8_t[pixels_data_size];
 	bool use_alpha = g_gui.gfx.hasTransparency();
 	uint8_t bpp = use_alpha ? 4 : 3;
@@ -1258,7 +1261,7 @@ uint8_t* GameSprite::NormalImage::getRGBAData() {
 	// decompress pixels
 	while (read < size && write < pixels_data_size) {
 		int transparent = dump[read] | dump[read + 1] << 8;
-		if (use_alpha && transparent >= SPRITE_PIXELS_SIZE) { // Corrupted sprite?
+		if (use_alpha && transparent >= g_gui.gfx.getSpritePixelsSize()) { // Corrupted sprite?
 			break;
 		}
 		read += 2;
@@ -1363,15 +1366,15 @@ uint8_t* GameSprite::TemplateImage::getRGBData() {
 		lookFeet = 0;
 	}
 
-	for (int y = 0; y < SPRITE_PIXELS; ++y) {
-		for (int x = 0; x < SPRITE_PIXELS; ++x) {
-			uint8_t& red = rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 0];
-			uint8_t& green = rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 1];
-			uint8_t& blue = rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 2];
+	for (int y = 0; y < g_gui.gfx.getSpritePixels(); ++y) {
+		for (int x = 0; x < g_gui.gfx.getSpritePixels(); ++x) {
+			uint8_t& red = rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 0];
+			uint8_t& green = rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 1];
+			uint8_t& blue = rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 2];
 
-			uint8_t& tred = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 0];
-			uint8_t& tgreen = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 1];
-			uint8_t& tblue = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 2];
+			uint8_t& tred = template_rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 0];
+			uint8_t& tgreen = template_rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 1];
+			uint8_t& tblue = template_rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 2];
 
 			if (tred && tgreen && !tblue) { // yellow => head
 				colorizePixel(lookHead, red, green, blue);
@@ -1414,15 +1417,15 @@ uint8_t* GameSprite::TemplateImage::getRGBAData() {
 		lookFeet = 0;
 	}
 
-	for (int y = 0; y < SPRITE_PIXELS; ++y) {
-		for (int x = 0; x < SPRITE_PIXELS; ++x) {
-			uint8_t& red = rgbadata[y * SPRITE_PIXELS * 4 + x * 4 + 0];
-			uint8_t& green = rgbadata[y * SPRITE_PIXELS * 4 + x * 4 + 1];
-			uint8_t& blue = rgbadata[y * SPRITE_PIXELS * 4 + x * 4 + 2];
+	for (int y = 0; y < g_gui.gfx.getSpritePixels(); ++y) {
+		for (int x = 0; x < g_gui.gfx.getSpritePixels(); ++x) {
+			uint8_t& red = rgbadata[y * g_gui.gfx.getSpritePixels() * 4 + x * 4 + 0];
+			uint8_t& green = rgbadata[y * g_gui.gfx.getSpritePixels() * 4 + x * 4 + 1];
+			uint8_t& blue = rgbadata[y * g_gui.gfx.getSpritePixels() * 4 + x * 4 + 2];
 
-			uint8_t& tred = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 0];
-			uint8_t& tgreen = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 1];
-			uint8_t& tblue = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 2];
+			uint8_t& tred = template_rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 0];
+			uint8_t& tgreen = template_rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 1];
+			uint8_t& tblue = template_rgbdata[y * g_gui.gfx.getSpritePixels() * 3 + x * 3 + 2];
 
 			if (tred && tgreen && !tblue) { // yellow => head
 				colorizePixel(lookHead, red, green, blue);

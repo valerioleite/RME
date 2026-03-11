@@ -152,12 +152,12 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 			int view_start_x, view_start_y;
 			int view_end_x, view_end_y;
 
-			int tile_size = int(TileSize / canvas->GetZoom()); // after zoom
+			int tile_size = int(g_gui.gfx.getSpritePixels() / canvas->GetZoom()); // after zoom
 
 			int floor_offset = (floor > GROUND_LAYER ? 0 : (GROUND_LAYER - floor));
 
-			view_start_x = view_scroll_x / TileSize + floor_offset;
-			view_start_y = view_scroll_y / TileSize + floor_offset;
+			view_start_x = view_scroll_x / g_gui.gfx.getSpritePixels() + floor_offset;
+			view_start_y = view_scroll_y / g_gui.gfx.getSpritePixels() + floor_offset;
 
 			view_end_x = view_start_x + screensize_x / tile_size + 1;
 			view_end_y = view_start_y + screensize_y / tile_size + 1;

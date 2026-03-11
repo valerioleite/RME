@@ -309,6 +309,9 @@ public:
 	bool hasTransparency() const;
 	bool isUnloaded() const;
 
+	int getSpritePixels() const { return sprite_pixels; }
+	int getSpritePixelsSize() const { return sprite_pixels * sprite_pixels; }
+
 	ClientVersion* client_version;
 
 private:
@@ -331,6 +334,7 @@ private:
 	bool has_transparency;
 	bool has_frame_durations;
 	bool has_frame_groups;
+	int sprite_pixels;
 	wxFileName metadata_file;
 	wxFileName sprites_file;
 
