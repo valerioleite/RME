@@ -44,7 +44,7 @@
 #include "lua/lua_script_manager.h"
 
 #ifdef __WXOSX__
-	#include <AGL/agl.h>
+	#include <OpenGL/gl.h>
 #endif
 
 const wxEventType EVT_UPDATE_MENUS = wxNewEventType();

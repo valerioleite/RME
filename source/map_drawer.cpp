@@ -449,9 +449,6 @@ void MapDrawer::DrawBackground() {
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
-
-	// glAlphaFunc(GL_GEQUAL, 0.9f);
-	// glEnable(GL_ALPHA_TEST);
 }
 
 inline int getFloorAdjustment(int floor) {

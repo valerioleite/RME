@@ -133,8 +133,10 @@ protected:
 		NormalImage();
 		virtual ~NormalImage();
 
-		// We use the sprite id as GL texture id
+		// Sprite id from the game data files
 		uint32_t id;
+		// OpenGL texture id (generated via glGenTextures)
+		GLuint gl_tid;
 
 		// This contains the pixel data
 		uint16_t size;

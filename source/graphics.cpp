@@ -215,8 +215,9 @@ bool GraphicManager::isUnloaded() const {
 }
 
 GLuint GraphicManager::getFreeTextureID() {
-	static GLuint id_counter = 0x10000000;
-	return id_counter++; // This should (hopefully) never run out
+	GLuint id;
+	glGenTextures(1, &id);
+	return id;
 }
 
 void GraphicManager::clear() {
@@ -1169,6 +1170,7 @@ void GameSprite::Image::clean(int time) {
 
 GameSprite::NormalImage::NormalImage() :
 	id(0),
+	gl_tid(0),
 	size(0),
 	dump(nullptr) {
 	////
@@ -1293,18 +1295,21 @@ uint8_t* GameSprite::NormalImage::getRGBAData() {
 
 GLuint GameSprite::NormalImage::getHardwareID() {
 	if (!isGLLoaded) {
-		createGLTexture(id);
+		if (gl_tid == 0) {
+			glGenTextures(1, &gl_tid);
+		}
+		createGLTexture(gl_tid);
 	}
 	visit();
-	return id;
+	return gl_tid;
 }
 
 void GameSprite::NormalImage::createGLTexture(GLuint ignored) {
-	Image::createGLTexture(id);
+	Image::createGLTexture(gl_tid);
 }
 
 void GameSprite::NormalImage::unloadGLTexture(GLuint ignored) {
-	Image::unloadGLTexture(id);
+	Image::unloadGLTexture(gl_tid);
 }
 
 GameSprite::TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :

@@ -81,29 +81,29 @@ void LuaEngine::setupSandbox() {
 
 	// Sandbox OS library
 	if (lua["os"].valid()) {
-		lua["os"]["execute"] = sol::nil;
-		lua["os"]["exit"] = sol::nil;
-		lua["os"]["remove"] = sol::nil;
-		lua["os"]["rename"] = sol::nil;
-		lua["os"]["tmpname"] = sol::nil;
-		lua["os"]["getenv"] = sol::nil;
-		lua["os"]["setlocale"] = sol::nil;
+		lua["os"]["execute"] = sol::lua_nil;
+		lua["os"]["exit"] = sol::lua_nil;
+		lua["os"]["remove"] = sol::lua_nil;
+		lua["os"]["rename"] = sol::lua_nil;
+		lua["os"]["tmpname"] = sol::lua_nil;
+		lua["os"]["getenv"] = sol::lua_nil;
+		lua["os"]["setlocale"] = sol::lua_nil;
 	}
 
 	// Disable IO library completely - scripts must use app.storage
-	lua["io"] = sol::nil;
+	lua["io"] = sol::lua_nil;
 
 	// Disable dynamic loading of C libraries
 	if (lua["package"].valid()) {
-		lua["package"]["loadlib"] = sol::nil;
+		lua["package"]["loadlib"] = sol::lua_nil;
 
 		// Also remove C loaders from package.searchers (Lua 5.2+) to prevent 'require' from loading DLLs
 		if (lua["package"]["searchers"].valid()) {
 			sol::table searchers = lua["package"]["searchers"];
 			// 1: preload, 2: lua loader, 3: c loader, 4: all-in-one loader
 			// Keep 1 and 2, remove 3 and 4
-			searchers[3] = sol::nil;
-			searchers[4] = sol::nil;
+			searchers[3] = sol::lua_nil;
+			searchers[4] = sol::lua_nil;
 		}
 	}
 

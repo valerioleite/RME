@@ -441,7 +441,7 @@ void LuaScriptManager::updateMapOverlayHover(int map_x, int map_y, int map_z, in
 
 		try {
 			sol::object result = overlay.onhover(info);
-			if (!result.valid() || result.is<sol::nil_t>()) {
+			if (!result.valid() || result.is<sol::lua_nil_t>()) {
 				continue;
 			}
 

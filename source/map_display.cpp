@@ -109,7 +109,7 @@ END_EVENT_TABLE()
 bool MapCanvas::processed[] = { 0 };
 
 MapCanvas::MapCanvas(wxWindow* parent, Editor& editor, int* attriblist) :
-	wxGLCanvas(parent, wxID_ANY, nullptr, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
+	wxGLCanvas(parent, wxID_ANY, attriblist, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
 	editor(editor),
 	floor(GROUND_LAYER),
 	zoom(1.0),
@@ -196,6 +196,7 @@ void MapCanvas::GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensi
 }
 
 void MapCanvas::OnPaint(wxPaintEvent& event) {
+	wxPaintDC dc(this);
 	SetCurrent(*g_gui.GetGLContext(this));
 
 	if (g_gui.IsRenderingEnabled()) {

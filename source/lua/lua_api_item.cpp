@@ -100,7 +100,7 @@ namespace LuaAPI {
 		items["getInfo"] = [](sol::this_state ts, int id) -> sol::object {
 			sol::state_view lua(ts);
 			if (!g_items.typeExists(id)) {
-				return sol::nil;
+				return sol::lua_nil;
 			}
 			ItemType& it = g_items.getItemType(id);
 			sol::table info = lua.create_table();

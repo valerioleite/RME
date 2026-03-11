@@ -16,7 +16,7 @@ namespace LuaAPI {
 	sol::object valueToLua(const json_spirit::mValue& val, sol::state_view& lua) {
 		switch (val.type()) {
 			case json_spirit::null_type:
-				return sol::nil;
+				return sol::lua_nil;
 			case json_spirit::bool_type:
 				return sol::make_object(lua, val.get_bool());
 			case json_spirit::int_type:
@@ -42,13 +42,13 @@ namespace LuaAPI {
 				return t;
 			}
 		}
-		return sol::nil;
+		return sol::lua_nil;
 	}
 
 	// Convert Lua Object to JSON Spirit Value
 	json_spirit::mValue luaToValue(const sol::object& obj) {
 		switch (obj.get_type()) {
-			case sol::type::nil:
+			case sol::type::lua_nil:
 				return json_spirit::mValue(); // null
 			case sol::type::boolean:
 				return json_spirit::mValue(obj.as<bool>());
@@ -168,7 +168,7 @@ namespace LuaAPI {
 				sol::state_view lua(s);
 				return valueToLua(val, lua);
 			}
-			return sol::nil;
+			return sol::lua_nil;
 		});
 
 		lua["json"] = jsonTable;

@@ -259,7 +259,7 @@ namespace LuaAPI {
 					}
 					return jsonObj;
 				}
-			} else if (obj.is<sol::nil_t>()) {
+			} else if (obj.is<sol::lua_nil_t>()) {
 				return nullptr;
 			}
 			return nullptr;
