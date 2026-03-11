@@ -189,6 +189,7 @@ GraphicManager::GraphicManager() :
 	has_frame_durations(false),
 	has_frame_groups(false),
 	sprite_pixels(32),
+	topdown(false),
 	loaded_textures(0),
 	lastclean(0) {
 	animation_timer = newd wxStopWatch();
@@ -447,6 +448,7 @@ bool GraphicManager::loadOTFI(const FileName& filename, wxString& error, wxArray
 		has_frame_durations = node->valueAt<bool>("frame-durations");
 		has_frame_groups = node->valueAt<bool>("frame-groups");
 		sprite_pixels = node->valueAt<int>("sprite-size", 32);
+		topdown = node->valueAt<bool>("topdown", false);
 		std::string metadata = node->valueAt<std::string>("metadata-file", std::string(ASSETS_NAME) + ".dat");
 		std::string sprites = node->valueAt<std::string>("sprites-file", std::string(ASSETS_NAME) + ".spr");
 		metadata_file = wxFileName(filename.GetFullPath(), wxString(metadata));
@@ -460,6 +462,7 @@ bool GraphicManager::loadOTFI(const FileName& filename, wxString& error, wxArray
 		has_frame_durations = false;
 		has_frame_groups = false;
 		sprite_pixels = 32;
+		topdown = false;
 		metadata_file = wxFileName(filename.GetFullPath(), wxString(ASSETS_NAME) + ".dat");
 		sprites_file = wxFileName(filename.GetFullPath(), wxString(ASSETS_NAME) + ".spr");
 	}

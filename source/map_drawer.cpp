@@ -531,7 +531,11 @@ void MapDrawer::DrawMap() {
 						for (int map_x = 0; map_x < 4; ++map_x) {
 							for (int map_y = 0; map_y < 4; ++map_y) {
 								TileLocation* location = nd->getTile(map_x, map_y, map_z);
-								DrawTile(location);
+								if (g_gui.gfx.isTopDown()) {
+									DrawTile(location, PHASE_GROUND);
+								} else {
+									DrawTile(location);
+								}
 								// draw light, but only if not zoomed too far
 								if (location && options.isDrawLight() && zoom <= 10.0) {
 									AddLight(location);
@@ -554,6 +558,26 @@ void MapDrawer::DrawMap() {
 						glVertex2f(cx + g_gui.gfx.getSpritePixels() * 4, cy);
 						glVertex2f(cx, cy);
 						glEnd();
+					}
+				}
+			}
+
+			// Top-down second pass: draw items layer after all grounds
+			if (g_gui.gfx.isTopDown()) {
+				for (int nd_map_x2 = nd_start_x; nd_map_x2 <= nd_end_x; nd_map_x2 += 4) {
+					for (int nd_map_y2 = nd_start_y; nd_map_y2 <= nd_end_y; nd_map_y2 += 4) {
+						QTreeNode* nd2 = editor.map.getLeaf(nd_map_x2, nd_map_y2);
+						if (!nd2) {
+							continue;
+						}
+						if (!live_client || nd2->isVisible(map_z > GROUND_LAYER)) {
+							for (int map_x = 0; map_x < 4; ++map_x) {
+								for (int map_y = 0; map_y < 4; ++map_y) {
+									TileLocation* location = nd2->getTile(map_x, map_y, map_z);
+									DrawTile(location, PHASE_ITEMS);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -1337,6 +1361,12 @@ void MapDrawer::BlitItem(int& draw_x, int& draw_y, const Position& pos, Item* it
 	int screenx = draw_x - spr->getDrawOffset().first;
 	int screeny = draw_y - spr->getDrawOffset().second;
 
+	// Top-down: center multi-tile sprites on the tile
+	if (g_gui.gfx.isTopDown() && (spr->width > 1 || spr->height > 1)) {
+		int sp = g_gui.gfx.getSpritePixels();
+		screenx += (spr->width - 1) * sp / 2;
+	}
+
 	// Set the newd drawing height accordingly
 	draw_x -= spr->getDrawHeight();
 	draw_y -= spr->getDrawHeight();
@@ -1460,6 +1490,11 @@ void MapDrawer::BlitSpriteType(int screenx, int screeny, uint32_t spriteid, int 
 	screenx -= spr->getDrawOffset().first;
 	screeny -= spr->getDrawOffset().second;
 
+	if (g_gui.gfx.isTopDown() && (spr->width > 1 || spr->height > 1)) {
+		int sp = g_gui.gfx.getSpritePixels();
+		screenx += (spr->width - 1) * sp / 2;
+	}
+
 	int tme = 0; // GetTime() % itype->FPA;
 	for (int cx = 0; cx != spr->width; ++cx) {
 		for (int cy = 0; cy != spr->height; ++cy) {
@@ -1478,6 +1513,11 @@ void MapDrawer::BlitSpriteType(int screenx, int screeny, GameSprite* spr, int re
 	}
 	screenx -= spr->getDrawOffset().first;
 	screeny -= spr->getDrawOffset().second;
+
+	if (g_gui.gfx.isTopDown() && (spr->width > 1 || spr->height > 1)) {
+		int sp = g_gui.gfx.getSpritePixels();
+		screenx += (spr->width - 1) * sp / 2;
+	}
 
 	int tme = 0; // GetTime() % itype->FPA;
 	for (int cx = 0; cx != spr->width; ++cx) {
@@ -1517,10 +1557,15 @@ void MapDrawer::BlitCreature(int screenx, int screeny, const Outfit& outfit, Dir
 				mountOutfit.lookLegs = outfit.lookMountLegs;
 				mountOutfit.lookFeet = outfit.lookMountFeet;
 
+				int mountsx = screenx, mountsy = screeny;
+				if (g_gui.gfx.isTopDown() && (mountSpr->width > 1 || mountSpr->height > 1)) {
+					int sp = g_gui.gfx.getSpritePixels();
+					mountsx += (mountSpr->width - 1) * sp / 2;
+				}
 				for (int cx = 0; cx != mountSpr->width; ++cx) {
 					for (int cy = 0; cy != mountSpr->height; ++cy) {
 						int texnum = mountSpr->getHardwareID(cx, cy, (int)dir, 0, 0, mountOutfit, tme);
-						glBlitTexture(screenx - cx * g_gui.gfx.getSpritePixels(), screeny - cy * g_gui.gfx.getSpritePixels(), texnum, red, green, blue, alpha);
+						glBlitTexture(mountsx - cx * g_gui.gfx.getSpritePixels(), mountsy - cy * g_gui.gfx.getSpritePixels(), texnum, red, green, blue, alpha);
 					}
 				}
 
@@ -1529,6 +1574,11 @@ void MapDrawer::BlitCreature(int screenx, int screeny, const Outfit& outfit, Dir
 		}
 
 		// pattern_y => creature addon
+		int creatsx = screenx, creatsy = screeny;
+		if (g_gui.gfx.isTopDown() && (spr->width > 1 || spr->height > 1)) {
+			int sp = g_gui.gfx.getSpritePixels();
+			creatsx += (spr->width - 1) * sp / 2;
+		}
 		for (int pattern_y = 0; pattern_y < spr->pattern_y; pattern_y++) {
 
 			// continue if we dont have this addon
@@ -1539,7 +1589,7 @@ void MapDrawer::BlitCreature(int screenx, int screeny, const Outfit& outfit, Dir
 			for (int cx = 0; cx != spr->width; ++cx) {
 				for (int cy = 0; cy != spr->height; ++cy) {
 					int texnum = spr->getHardwareID(cx, cy, (int)dir, pattern_y, pattern_z, outfit, tme);
-					glBlitTexture(screenx - cx * g_gui.gfx.getSpritePixels(), screeny - cy * g_gui.gfx.getSpritePixels(), texnum, red, green, blue, alpha);
+					glBlitTexture(creatsx - cx * g_gui.gfx.getSpritePixels(), creatsy - cy * g_gui.gfx.getSpritePixels(), texnum, red, green, blue, alpha);
 				}
 			}
 		}
@@ -1684,7 +1734,7 @@ void MapDrawer::WriteTooltip(Waypoint* waypoint, std::ostringstream& stream) {
 	stream << "wp: " << waypoint->name << "\n";
 }
 
-void MapDrawer::DrawTile(TileLocation* location) {
+void MapDrawer::DrawTile(TileLocation* location, DrawPhase phase) {
 	if (!location) {
 		return;
 	}
@@ -1776,37 +1826,57 @@ void MapDrawer::DrawTile(TileLocation* location) {
 		}
 	}
 
-	if (only_colors) {
-		if (as_minimap) {
-			uint8_t color = tile->getMiniMapColor();
-			r = (uint8_t)(int(color / 36) % 6 * 51);
-			g = (uint8_t)(int(color / 6) % 6 * 51);
-			b = (uint8_t)(color % 6 * 51);
-			BlitSquare(draw_x, draw_y, r, g, b, 255);
-		} else if (r != 255 || g != 255 || b != 255) {
-			BlitSquare(draw_x, draw_y, r, g, b, 128);
-		}
-	} else {
-		if (tile->ground) {
-			if (options.show_preview && zoom <= 2.0) {
-				tile->ground->animate();
+	// PHASE_GROUND: ground + borders
+	if (phase == PHASE_ALL || phase == PHASE_GROUND) {
+		if (only_colors) {
+			if (as_minimap) {
+				uint8_t color = tile->getMiniMapColor();
+				r = (uint8_t)(int(color / 36) % 6 * 51);
+				g = (uint8_t)(int(color / 6) % 6 * 51);
+				b = (uint8_t)(color % 6 * 51);
+				BlitSquare(draw_x, draw_y, r, g, b, 255);
+			} else if (r != 255 || g != 255 || b != 255) {
+				BlitSquare(draw_x, draw_y, r, g, b, 128);
 			}
+		} else {
+			if (tile->ground) {
+				if (options.show_preview && zoom <= 2.0) {
+					tile->ground->animate();
+				}
 
-			BlitItem(draw_x, draw_y, tile, tile->ground, false, r, g, b);
-		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
-			DrawRawBrush(draw_x, draw_y, &g_items[SPRITE_ZONE], r, g, b, 60);
+				BlitItem(draw_x, draw_y, tile, tile->ground, false, r, g, b);
+			} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
+				DrawRawBrush(draw_x, draw_y, &g_items[SPRITE_ZONE], r, g, b, 60);
+			}
+		}
+
+		if (options.show_tooltips && map_z == floor && tile->ground) {
+			WriteTooltip(tile->ground, tooltip);
+		}
+
+		// borders go with ground layer
+		if (!only_colors && (zoom < 10.0 || !options.hide_items_when_zoomed)) {
+			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
+				if ((*it)->isBorder()) {
+					if (options.show_preview && zoom <= 2.0) {
+						(*it)->animate();
+					}
+					BlitItem(draw_x, draw_y, tile, *it, false, r, g, b);
+				}
+			}
 		}
 	}
+	// end ground phase
 
-	if (options.show_tooltips && map_z == floor && tile->ground) {
-		WriteTooltip(tile->ground, tooltip);
-	}
-	// end filters for ground tile
-
-	if (!only_colors) {
+	// PHASE_ITEMS: non-border items + creatures + overlays
+	if (!only_colors && (phase == PHASE_ALL || phase == PHASE_ITEMS)) {
 		if (zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
+				if ((*it)->isBorder()) {
+					continue; // already drawn in ground phase
+				}
+
 				// item tooltip
 				if (options.show_tooltips && map_z == floor) {
 					WriteTooltip(*it, tooltip, tile->isHouseTile());
@@ -1817,22 +1887,18 @@ void MapDrawer::DrawTile(TileLocation* location) {
 					(*it)->animate();
 				}
 
-				// item sprite
-				if ((*it)->isBorder()) {
-					BlitItem(draw_x, draw_y, tile, *it, false, r, g, b);
-				} else {
-					r = 255, g = 255, b = 255;
+				r = 255, g = 255, b = 255;
 
-					if (options.extended_house_shader && options.show_houses && tile->isHouseTile()) {
-						if ((int)tile->getHouseID() == current_house_id) {
-							r /= 2;
-						} else {
-							r /= 2;
-							g /= 2;
-						}
+				if (options.extended_house_shader && options.show_houses && tile->isHouseTile()) {
+					if ((int)tile->getHouseID() == current_house_id) {
+						r /= 2;
+					} else {
+						r /= 2;
+						g /= 2;
 					}
-					BlitItem(draw_x, draw_y, tile, *it, false, r, g, b);
 				}
+
+				BlitItem(draw_x, draw_y, tile, *it, false, r, g, b);
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {

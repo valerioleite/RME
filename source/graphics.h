@@ -311,6 +311,7 @@ public:
 
 	int getSpritePixels() const { return sprite_pixels; }
 	int getSpritePixelsSize() const { return sprite_pixels * sprite_pixels; }
+	bool isTopDown() const { return topdown; }
 
 	ClientVersion* client_version;
 
@@ -335,6 +336,7 @@ private:
 	bool has_frame_durations;
 	bool has_frame_groups;
 	int sprite_pixels;
+	bool topdown;
 	wxFileName metadata_file;
 	wxFileName sprites_file;
 
